@@ -46,6 +46,24 @@ class Client:
     status = response["status"]
     msg = response["message"]
     return f"\n[{status}] {msg}"
+  
+  def remove_file(self, filename, number_of_replicas=1):
+    if not filename:
+      return self.handle_response({
+      "status": Status.ERROR,
+      "message": "Nome do arquivo inválido. Tente Novamente!"
+    })
+
+    command_message = {
+      "command":Command.REMOVE,
+      "filename": filename,
+      "number_of_replicas": number_of_replicas
+    }
+    self.client_socket.sendall(json.dumps(command_message).encode(constants.FORMAT))
+    raw_remove_resp = self.client_socket.recv(constants.BASE_MSG_SIZE).decode(constants.FORMAT)
+    remove_resp = json.loads(raw_remove_resp)
+
+    return self.handle_response(remove_resp)
 
   def recover_file(self, filename):
     if not filename:
@@ -111,6 +129,7 @@ class Client:
       print('--- MENU ---')
       print('1. Depositar arquivo')
       print('2. Recuperar arquivo')
+      print('3. Remover arquivo')
       print('0. Sair')
 
       option = input('Selecione uma opção: ')
@@ -123,6 +142,11 @@ class Client:
       elif option == '2':
         filename = input('Informe o nome do arquivo a ser recuperado: ')
         response = self.recover_file(filename)
+        print(f"{response}\n")
+      elif option == '3':
+        filename = input('Informe o nome do arquivo a ser removido: ')
+        replicas = input(f'Informe o número de replicas a serem removidas: ')
+        response = self.remove_file(filename, replicas)
         print(f"{response}\n")
       elif option == '0':
         break

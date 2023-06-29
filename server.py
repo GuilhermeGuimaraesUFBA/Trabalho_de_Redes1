@@ -54,12 +54,14 @@ class Server:
       # Round Robin
       self.current_server_id = (self.current_server_id  % constants.NUMBER_OF_SERVERS ) +1
 
-    message = "Seu arquivo foi armazenado com sucesso!"
     if actual_replicas != number_of_replicas:
-      message = f"Seu arquivo ja estava replicado e só conseguimos replicar mais {actual_replicas} ao invés de {number_of_replicas} pois ele ja se encontra em todos servidores disponíveis!"
+      return {
+        "status":Status.OK,
+        "message":f"Seu arquivo ja estava replicado e só conseguimos replicar mais {actual_replicas} ao invés de {number_of_replicas} pois ele ja se encontra em todos servidores disponíveis!"
+      }
     return {
       "status":Status.OK,
-      "message":message
+      "message":"Seu arquivo foi armazenado com sucesso!"
     } 
   
   def recover_file(self, filename):
@@ -79,6 +81,33 @@ class Server:
       "message":f"Arquivo disponível!",
       "size": len(data)
     }, data]
+
+  def remove_file(self, filename, number_of_replicas):
+    removed = 0
+    for server_id in self.servers_ids:
+      path = f"./server_storage_{server_id}/{filename}"
+      if os.path.isfile(path):
+        os.remove(path)
+        removed+=1
+      if removed == number_of_replicas:
+        break
+
+    if removed == 0:
+      return {
+        "status": Status.ERROR,
+        "message": "Esse arquivo nao se encontra em nossos servidores!"
+      }
+    
+    if removed < number_of_replicas:
+      return {
+        "status": Status.OK,
+        "message":  f"Quantidade de replicas existentes em nossos servidores ({removed}) foi menor que a quantidade exigida ({number_of_replicas}). Dessa forma, removemos todas as existentes com sucesso!"
+      }    
+    
+    return {
+      "status": Status.OK,
+      "message": "Arquivos removidos com sucesso!"
+    }
 
   def handle_client(self, client_conn, address):
     print(f"[Conexão Estabelecida] {address}")
@@ -113,6 +142,11 @@ class Server:
         if response[0]["status"] == Status.OK:
           client_conn.recv(constants.BASE_MSG_SIZE).decode(constants.FORMAT) 
           client_conn.sendall(response[1])
+      elif command_msg["command"] == Command.REMOVE:
+        number_of_replicas = int(command_msg["number_of_replicas"])
+        response = self.remove_file(filename, number_of_replicas)
+        print(response)
+        client_conn.sendall(json.dumps(response).encode(constants.FORMAT))
 
   def run(self):
     self.server_socket.bind((self.host, self.port))
