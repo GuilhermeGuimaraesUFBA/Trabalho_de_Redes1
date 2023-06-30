@@ -47,6 +47,25 @@ class Client:
     msg = response["message"]
     return f"\n[{status}] {msg}"
   
+  def increase_replicas(self, filename, number_of_replicas=1):
+    if not filename:
+      return self.handle_response({
+      "status": Status.ERROR,
+      "message": "Nome do arquivo inválido. Tente Novamente!"
+    })
+
+    command_message = {
+      "command":Command.INCREASE,
+      "filename": filename,
+      "number_of_replicas": number_of_replicas
+    }
+
+    self.client_socket.sendall(json.dumps(command_message).encode(constants.FORMAT))
+    raw_increase_resp = self.client_socket.recv(constants.BASE_MSG_SIZE).decode(constants.FORMAT)
+    increase_resp = json.loads(raw_increase_resp)
+
+    return self.handle_response(increase_resp)
+  
   def remove_file(self, filename, number_of_replicas=1):
     if not filename:
       return self.handle_response({
@@ -130,6 +149,7 @@ class Client:
       print('1. Depositar arquivo')
       print('2. Recuperar arquivo')
       print('3. Remover arquivo')
+      print('4. Aumentar replicas')
       print('0. Sair')
 
       option = input('Selecione uma opção: ')
@@ -147,6 +167,11 @@ class Client:
         filename = input('Informe o nome do arquivo a ser removido: ')
         replicas = input(f'Informe o número de replicas a serem removidas: ')
         response = self.remove_file(filename, replicas)
+        print(f"{response}\n")
+      elif option == '4':
+        filename = input('Informe o nome do arquivo a ser replicado: ')
+        replicas = input(f'Informe o número de replicas a serem adicionadas: ')
+        response = self.increase_replicas(filename, replicas)
         print(f"{response}\n")
       elif option == '0':
         break

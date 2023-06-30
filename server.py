@@ -82,6 +82,19 @@ class Server:
       "size": len(data)
     }, data]
 
+  def increase_replicas(self, filename, number_of_replicas):
+    server_with_file = self.get_server_with_file(filename)
+    if server_with_file == -1:
+      return {
+        "status":Status.ERROR,
+        "message":f"Esse arquivo não existe em nenhum dos nossos servidores!",
+      }
+    with open(f"./server_storage_{server_with_file}/{filename}","rb") as file:
+      data = file.read()
+    
+    return self.deposit_file(filename, data, number_of_replicas)
+
+
   def remove_file(self, filename, number_of_replicas):
     removed = 0
     for server_id in self.servers_ids:
@@ -145,7 +158,10 @@ class Server:
       elif command_msg["command"] == Command.REMOVE:
         number_of_replicas = int(command_msg["number_of_replicas"])
         response = self.remove_file(filename, number_of_replicas)
-        print(response)
+        client_conn.sendall(json.dumps(response).encode(constants.FORMAT))
+      elif command_msg["command"] == Command.INCREASE:
+        number_of_replicas = int(command_msg["number_of_replicas"])
+        response = self.increase_replicas(filename, number_of_replicas)
         client_conn.sendall(json.dumps(response).encode(constants.FORMAT))
 
   def run(self):
