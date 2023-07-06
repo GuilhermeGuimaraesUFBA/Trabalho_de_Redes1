@@ -142,7 +142,7 @@ class Server:
 
         client_conn.sendall(json.dumps({
           "status":Status.OK,
-          "message":f"Mensagem de deposit0 recebida!",
+          "message":f"Mensagem de deposito recebida!",
         }).encode(constants.FORMAT))
 
         number_of_replicas = int(command_msg["number_of_replicas"])

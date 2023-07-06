@@ -116,7 +116,11 @@ class Client:
         "status": Status.ERROR,
         "message": "Nome do arquivo inválido. Tente Novamente!"
       })
-    
+    if not os.path.isfile(f"./client_storage/{filename}"):
+      return self.handle_response({
+        "status": Status.ERROR,
+        "message": "Arquivo nao existe no armazenamento do cliente!"
+      })
     with open(f"./client_storage/{filename}", 'rb') as file:
       data = file.read()
       
