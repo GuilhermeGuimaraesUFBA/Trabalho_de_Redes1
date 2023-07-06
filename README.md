@@ -13,13 +13,13 @@
 
  ## 1. Equipe: <a name = "equipe"></a>
 
-Erick Kokubum
+- Erick Kokubum
 
-Guilherme Guimaraes
+- Guilherme Guimaraes
 
-Edyo de Andrade
+- Edyo de Andrade
 
-Cleyton Solares
+- Cleyton Solares
  
  
  ## 2. Estrutura do código: <a name = "estrutura_do_codigo"></a>
